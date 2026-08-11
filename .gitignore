@@ -1,0 +1,10 @@
+# macOS metadata
+.DS_Store
+
+# KiCad transient and per-user files
+~*.lck
+*.kicad_prl
+
+# KiCad automatic history and backups
+.history/
+*-backups/

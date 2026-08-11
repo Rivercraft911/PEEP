@@ -1,0 +1,5 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "Rivers_IC") (type "KiCad") (uri "${RIVERS_DIR}/symbols/Rivers_IC.kicad_symdir") (options "") (descr "River's custom integrated circuits"))
+	(lib (name "Rivers_Optoelectronics") (type "KiCad") (uri "${RIVERS_DIR}/symbols/Rivers_Optoelectronics.kicad_symdir") (options "") (descr "River's optical sensors, emitters, and receiver symbols"))
+)

@@ -1,0 +1,6 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "Rivers_IC") (type "KiCad") (uri "${RIVERS_DIR}/footprints/Rivers_IC.pretty") (options "") (descr "River's custom integrated-circuit footprints"))
+	(lib (name "Rivers_Optoelectronics") (type "KiCad") (uri "${RIVERS_DIR}/footprints/Rivers_Optoelectronics.pretty") (options "") (descr "River's optical sensors, emitters, and receiver footprints"))
+	(lib (name "Rivers_Mechanical") (type "KiCad") (uri "${RIVERS_DIR}/footprints/Rivers_Mechanical.pretty") (options "") (descr "River's mechanical and board-outline footprints"))
+)
