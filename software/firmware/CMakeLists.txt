@@ -12,8 +12,10 @@ set(TINYUSB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tinyusb)
 
 add_executable(peep
   src/board.c
+  src/ir_trigger.c
   src/main.c
   src/runtime.c
+  src/trigger_gate.c
   src/usb_descriptors.c
   src/usb_keyboard.c
   ${DEVICE_DIR}/Source/Templates/system_stm32f0xx.c
