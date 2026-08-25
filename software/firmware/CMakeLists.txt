@@ -13,6 +13,8 @@ set(TINYUSB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tinyusb)
 add_executable(peep
   src/board.c
   src/ir_trigger.c
+  src/hid_ascii.c
+  src/macro.c
   src/main.c
   src/runtime.c
   src/trigger_gate.c
