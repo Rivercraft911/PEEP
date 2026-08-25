@@ -10,6 +10,7 @@ set(DEVICE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cmsis-device-f0)
 set(CORE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cmsis-core)
 
 add_executable(peep
+  src/board.c
   src/main.c
   src/runtime.c
   ${DEVICE_DIR}/Source/Templates/system_stm32f0xx.c
@@ -18,6 +19,7 @@ add_executable(peep
 
 target_compile_definitions(peep PRIVATE STM32F042x6)
 target_include_directories(peep PRIVATE
+  include
   ${DEVICE_DIR}/Include
   ${CORE_DIR}/CMSIS/Core/Include
 )
