@@ -8,21 +8,34 @@ set(CMAKE_EXECUTABLE_SUFFIX .elf)
 set(MCU_FLAGS -mcpu=cortex-m0 -mthumb)
 set(DEVICE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cmsis-device-f0)
 set(CORE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cmsis-core)
+set(TINYUSB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tinyusb)
 
 add_executable(peep
   src/board.c
   src/main.c
   src/runtime.c
+  src/usb_descriptors.c
+  src/usb_keyboard.c
   ${DEVICE_DIR}/Source/Templates/system_stm32f0xx.c
   ${DEVICE_DIR}/Source/Templates/gcc/startup_stm32f042x6.s
+  ${TINYUSB_DIR}/src/tusb.c
+  ${TINYUSB_DIR}/src/common/tusb_fifo.c
+  ${TINYUSB_DIR}/src/device/usbd.c
+  ${TINYUSB_DIR}/src/class/hid/hid_device.c
+  ${TINYUSB_DIR}/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+  ${TINYUSB_DIR}/src/portable/st/stm32_fsdev/fsdev_common.c
 )
 
-target_compile_definitions(peep PRIVATE STM32F042x6)
+target_compile_definitions(peep PRIVATE
+  STM32F042x6
+  CFG_TUSB_MCU=OPT_MCU_STM32F0
+)
 target_include_directories(peep PRIVATE
   include
   ${DEVICE_DIR}/Include
   ${CORE_DIR}/CMSIS/Core/Include
 )
+target_include_directories(peep SYSTEM PRIVATE ${TINYUSB_DIR}/src)
 target_compile_options(peep PRIVATE
   ${MCU_FLAGS}
   -ffunction-sections

@@ -39,6 +39,11 @@ uint32_t board_millis(void)
     return ticks;
 }
 
+uint32_t tusb_time_millis_api(void)
+{
+    return board_millis();
+}
+
 void SysTick_Handler(void)
 {
     ++ticks;

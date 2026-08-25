@@ -1,12 +1,12 @@
 #include "board.h"
-
-#include "stm32f0xx.h"
+#include "usb_keyboard.h"
 
 int main(void)
 {
     board_init();
+    usb_keyboard_init();
 
     for (;;) {
-        __WFI();
+        usb_keyboard_task();
     }
 }
