@@ -43,6 +43,11 @@ bool ir_trigger_take(void)
     return trigger_gate_take(&gate);
 }
 
+bool ir_trigger_armed(void)
+{
+    return trigger_gate_armed(&gate);
+}
+
 void EXTI0_1_IRQHandler(void)
 {
     if ((EXTI->PR & IR_PIN) != 0U) {

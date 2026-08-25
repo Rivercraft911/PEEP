@@ -14,5 +14,6 @@ typedef struct {
 void trigger_gate_update(trigger_gate_t *gate, uint32_t now_ms, bool allowed,
                          bool line_high, bool falling_edge);
 bool trigger_gate_take(trigger_gate_t *gate);
+bool trigger_gate_armed(trigger_gate_t const *gate);
 
 #endif

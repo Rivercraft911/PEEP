@@ -25,8 +25,8 @@ typedef struct {
 
 #define MACRO_WAIT(ms) \
     { .kind = MACRO_ACTION_WAIT_MS, .value.wait_ms = (ms) }
-#define MACRO_KEY(mods, key) \
-    { .kind = MACRO_ACTION_KEY, .value.key = { (mods), (key) } }
+#define MACRO_KEY(mods, usage) \
+    { .kind = MACRO_ACTION_KEY, .value.key = { (mods), (usage) } }
 #define MACRO_TEXT(string) \
     { .kind = MACRO_ACTION_TEXT, .value.text = (string) }
 #define MACRO_END() \

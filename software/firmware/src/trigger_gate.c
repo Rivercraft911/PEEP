@@ -41,3 +41,8 @@ bool trigger_gate_take(trigger_gate_t *gate)
     gate->fired = false;
     return fired;
 }
+
+bool trigger_gate_armed(trigger_gate_t const *gate)
+{
+    return gate->armed;
+}

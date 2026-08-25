@@ -66,14 +66,13 @@ bool hid_ascii_key(char character, uint8_t *modifiers, uint8_t *keycode)
         return true;
     }
 
-    if (character >= '!' && character <= ')') {
-        static char const shifted_digits[] = "1234567890";
-
-        *modifiers = PEEP_MOD_LEFT_SHIFT;
-        *keycode = shifted_digits[character - '!'] == '0'
-                       ? KEY_0
-                       : (uint8_t)(KEY_1 + shifted_digits[character - '!'] - '1');
-        return true;
+    static char const shifted_digits[] = "!@#$%^&*()";
+    for (uint8_t index = 0; index < 10U; ++index) {
+        if (character == shifted_digits[index]) {
+            *modifiers = PEEP_MOD_LEFT_SHIFT;
+            *keycode = index == 9U ? KEY_0 : (uint8_t)(KEY_1 + index);
+            return true;
+        }
     }
 
     return punctuation_key(character, modifiers, keycode);

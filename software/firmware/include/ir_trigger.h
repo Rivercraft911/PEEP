@@ -7,5 +7,6 @@
 void ir_trigger_init(void);
 void ir_trigger_task(uint32_t now_ms, bool allowed);
 bool ir_trigger_take(void);
+bool ir_trigger_armed(void);
 
 #endif

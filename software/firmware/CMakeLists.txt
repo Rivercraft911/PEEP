@@ -11,6 +11,7 @@ set(CORE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cmsis-core)
 set(TINYUSB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tinyusb)
 
 add_executable(peep
+  src/app.c
   src/board.c
   src/ir_trigger.c
   src/hid_ascii.c
