@@ -61,6 +61,9 @@ target_link_options(peep PRIVATE
   -Wl,-Map,$<TARGET_FILE_DIR:peep>/peep.map
   -T${CMAKE_CURRENT_SOURCE_DIR}/linker/stm32f042g6.ld
 )
+set_property(TARGET peep APPEND PROPERTY LINK_DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/linker/stm32f042g6.ld
+)
 
 add_custom_command(TARGET peep POST_BUILD
   COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:peep> $<TARGET_FILE_DIR:peep>/peep.bin

@@ -108,11 +108,15 @@ SECTIONS
     . += _Min_Heap_Size;
     . += _Min_Stack_Size;
     . = ALIGN(8);
+    _ram_used_end = .;
   } > RAM
+
+  _flash_used_end = LOADADDR(.data) + SIZEOF(.data);
+  ASSERT((_flash_used_end - ORIGIN(FLASH)) <= 24K, "flash budget exceeded")
+  ASSERT((_ram_used_end - ORIGIN(RAM)) <= 4K, "RAM budget exceeded")
 
   /DISCARD/ :
   {
     *(.note.GNU-stack)
   }
 }
-
