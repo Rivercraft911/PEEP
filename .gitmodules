@@ -1,0 +1,9 @@
+[submodule "software/firmware/vendor/tinyusb"]
+	path = software/firmware/vendor/tinyusb
+	url = https://github.com/hathach/tinyusb.git
+[submodule "software/firmware/vendor/cmsis-core"]
+	path = software/firmware/vendor/cmsis-core
+	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "software/firmware/vendor/cmsis-device-f0"]
+	path = software/firmware/vendor/cmsis-device-f0
+	url = https://github.com/STMicroelectronics/cmsis_device_f0.git
