@@ -5,7 +5,7 @@
 #include "usb_keyboard.h"
 
 #define RELEASE_TIMEOUT_MS 250U
-#define DISCONNECT_MS 20U
+#define DISCONNECT_MS 250U
 
 static bool requested;
 static bool release_sent;
