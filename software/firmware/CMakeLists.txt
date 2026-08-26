@@ -15,9 +15,11 @@ add_executable(peep
   src/board.c
   src/dfu_runtime.c
   src/hid_ascii.c
+  src/ir_trigger.c
   src/macro.c
   src/main.c
   src/runtime.c
+  src/trigger_gate.c
   src/usb_descriptors.c
   src/usb_keyboard.c
   ${DEVICE_DIR}/Source/Templates/system_stm32f0xx.c

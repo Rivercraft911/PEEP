@@ -10,6 +10,8 @@ static trigger_gate_t gate;
 
 void ir_trigger_init(void)
 {
+    falling_edge = false;
+    gate = (trigger_gate_t){0};
     GPIOA->MODER &= ~(3U << GPIO_MODER_MODER1_Pos);
     GPIOA->PUPDR = (GPIOA->PUPDR & ~(3U << GPIO_PUPDR_PUPDR1_Pos)) |
                    (1U << GPIO_PUPDR_PUPDR1_Pos);

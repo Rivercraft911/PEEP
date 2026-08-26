@@ -1,6 +1,6 @@
 # PEEP firmware
 
-PEEP is a timed USB keyboard for authorized systems. Stage one targets Windows 11 with a US ANSI keyboard layout.
+PEEP is an IR-triggered USB keyboard for authorized systems. Stage one targets Windows 11 with a US ANSI keyboard layout.
 
 ## Build
 
@@ -70,9 +70,10 @@ Do not solder or desolder while powered. The downloaded image is application fir
 Windows enumerates `PEEP Keyboard`. With the default browser configured and Notepad available:
 
 1. Plug in PEEP and leave the active window untouched.
-2. Ten seconds after USB enumeration, PEEP opens the Rickroll URL.
-3. PEEP opens Notepad on the right and types the four-line demo monologue.
+2. After the receiver has been idle-high for 250 ms, send a 38 kHz IR burst.
+3. After 250 ms, PEEP opens the Rickroll URL.
+4. PEEP opens Notepad on the right and types the four-line demo monologue.
 
-The sequence runs once per power cycle. USB suspend aborts it and releases any held key; the timer restarts after resume.
+Triggers are ignored during the countdown and sequence. PEEP rearms after the sequence and another 250 ms idle-high period. USB suspend aborts it and releases any held key.
 
 `CAFE:5045` is a development-only USB VID/PID. Replace it with assigned values before distributing hardware.

@@ -4,10 +4,11 @@
 #include <stddef.h>
 
 #include "hid_ascii.h"
+#include "ir_trigger.h"
 #include "macro.h"
 #include "usb_keyboard.h"
 
-#define STARTUP_DELAY_MS 10000U
+#define COUNTDOWN_MS 250U
 
 static macro_action_t const demo[] = {
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
@@ -72,6 +73,7 @@ void app_init(void)
         .release = usb_release
     };
 
+    ir_trigger_init();
     macro_init(&runner, io);
     state = APP_WAIT_USB;
 }
@@ -82,25 +84,38 @@ void app_task(uint32_t now_ms)
 
     if (!usb_keyboard_mounted()) {
         macro_abort(&runner);
+        ir_trigger_task(now_ms, false);
         state = APP_WAIT_USB;
         return;
     }
 
     if (state == APP_WAIT_USB) {
         if (!macro_busy(&runner)) {
-            countdown_end = now_ms + STARTUP_DELAY_MS;
-            state = APP_COUNTDOWN;
+            state = APP_REARM;
         }
         return;
     }
 
-    if (state == APP_COUNTDOWN) {
+    if (state == APP_REARM) {
+        ir_trigger_task(now_ms, true);
+        if (ir_trigger_armed()) {
+            state = APP_ARMED;
+        }
+    } else if (state == APP_ARMED) {
+        ir_trigger_task(now_ms, true);
+        if (ir_trigger_take()) {
+            countdown_end = now_ms + COUNTDOWN_MS;
+            state = APP_COUNTDOWN;
+        }
+    } else if (state == APP_COUNTDOWN) {
+        ir_trigger_task(now_ms, false);
         if ((int32_t)(now_ms - countdown_end) >= 0) {
             state = macro_start(&runner, demo, now_ms) ? APP_RUNNING : APP_WAIT_USB;
         }
     } else if (state == APP_RUNNING) {
+        ir_trigger_task(now_ms, false);
         if (!macro_busy(&runner)) {
-            state = APP_DONE;
+            state = APP_REARM;
         }
     }
 }
