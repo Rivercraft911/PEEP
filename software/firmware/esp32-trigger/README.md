@@ -1,0 +1,28 @@
+# PEEP remote
+
+The XIAO ESP32-C6 serves a trigger button on the local Wi-Fi network and sends three 9 ms, 38 kHz IR bursts.
+
+## Wiring
+
+For the Adafruit High Power IR LED Emitter (5639):
+
+| XIAO ESP32-C6 | Emitter |
+| --- | --- |
+| `3V3` | `V+` |
+| `GND` | `GND` |
+| `D1` / GPIO1 | `In` |
+
+For the Adafruit IR Transceiver (5990), connect D1 to `IRout` and leave `IRin` open. Both boards use an active-high input and include the LED driver. Do not drive a bare high-current IR LED from a GPIO.
+
+At 3.3 V, the emitter board pulses about 100 mA through each of its two 940 nm LEDs. The XIAO regulator is rated for 700 mA. Aim the outward-facing emitter at PEEP's side-facing detector; the USB receptacle can shadow it.
+
+## Build
+
+1. Copy `secrets.example.h` to `secrets.h` and enter the Wi-Fi credentials. `secrets.h` is ignored by Git.
+2. Install the Espressif ESP32 Arduino core 3.3.11.
+3. Select `XIAO_ESP32C6`, open `esp32-trigger.ino`, and upload.
+4. Open `http://peep-trigger.local`. If mDNS is unavailable, use the IP printed at 115200 baud.
+
+The page is available only on the local network. It does not open a public internet port.
+
+Hardware references: [Adafruit 5639](https://www.adafruit.com/product/5639), [Adafruit 5990](https://learn.adafruit.com/adafruit-infrared-ir-remote-transceiver/pinouts), [XIAO ESP32-C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/), [VEMD10940F](https://www.vishay.com/docs/84171/vemd10940f.pdf), and [VSOP38338](https://www.vishay.com/docs/82748/vsop383.pdf).
