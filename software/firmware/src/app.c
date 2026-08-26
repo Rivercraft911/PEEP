@@ -25,7 +25,13 @@ static macro_action_t const demo[] = {
     MACRO_WAIT(500),
     MACRO_KEY(0, PEEP_KEY_ESCAPE),
     MACRO_WAIT(250),
-    MACRO_TEXT("Hello from PEEP."),
+    MACRO_TEXT("There comes a time in everyone's life where they are faced with a choice."),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_TEXT("To send river a rickroll, or to continue life in bliss."),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_TEXT("You made your choice."),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_TEXT("Face the consequences."),
     MACRO_END()
 };
 
