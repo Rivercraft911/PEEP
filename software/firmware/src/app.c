@@ -12,7 +12,7 @@
 static macro_action_t const demo[] = {
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
     MACRO_WAIT(500),
-    MACRO_TEXT("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+    MACRO_TEXT("https://www.youtube.com/watch?v=uT6mKkkvjJY"),
     MACRO_KEY(0, PEEP_KEY_ENTER),
     MACRO_WAIT(5000),
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
