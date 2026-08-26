@@ -20,6 +20,7 @@ uint32_t last_trigger_ms;
 bool has_triggered;
 bool mdns_started;
 bool network_announced;
+uint32_t last_status_ms;
 
 char const page[] PROGMEM = R"HTML(
 <!doctype html><meta name="viewport" content="width=device-width">
@@ -110,6 +111,9 @@ void loop()
         }
         mdns_started = false;
         network_announced = false;
+    } else if (static_cast<uint32_t>(millis() - last_status_ms) >= 2000U) {
+        Serial.printf("Wi-Fi status: %d\n", WiFi.status());
+        last_status_ms = millis();
     }
     delay(2);
 }
