@@ -5,7 +5,8 @@ enum {
     STRING_LANGID,
     STRING_MANUFACTURER,
     STRING_PRODUCT,
-    STRING_SERIAL
+    STRING_SERIAL,
+    STRING_DFU
 };
 
 static tusb_desc_device_t const device_descriptor = {
@@ -18,7 +19,7 @@ static tusb_desc_device_t const device_descriptor = {
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
     .idVendor = 0xCAFE,
     .idProduct = 0x5045,
-    .bcdDevice = 0x0100,
+    .bcdDevice = 0x0101,
     .iManufacturer = STRING_MANUFACTURER,
     .iProduct = STRING_PRODUCT,
     .iSerialNumber = STRING_SERIAL,
@@ -30,15 +31,21 @@ static uint8_t const hid_report_descriptor[] = {
 };
 
 static uint8_t const configuration_descriptor[] = {
-    TUD_CONFIG_DESCRIPTOR(1, 1, 0, TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(1, 2, 0,
+                          TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_DFU_RT_DESC_LEN,
+                          0, 100),
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD,
-                       sizeof(hid_report_descriptor), 0x81, 8, 10)
+                       sizeof(hid_report_descriptor), 0x81, 8, 10),
+    TUD_DFU_RT_DESCRIPTOR(1, STRING_DFU,
+                          DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD |
+                              DFU_ATTR_WILL_DETACH,
+                          1000, 1024)
 };
 
-static char const *const strings[] = {
-    NULL,
-    "PEEP",
-    "PEEP Keyboard"
+static char const *const strings[STRING_DFU + 1] = {
+    [STRING_MANUFACTURER] = "PEEP",
+    [STRING_PRODUCT] = "PEEP Keyboard",
+    [STRING_DFU] = "PEEP DFU Runtime"
 };
 
 static uint16_t string_descriptor[32];

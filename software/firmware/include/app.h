@@ -13,6 +13,7 @@ typedef enum {
 
 void app_init(void);
 void app_task(uint32_t now_ms);
+void app_abort(void);
 app_state_t app_state(void);
 
 #endif

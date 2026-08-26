@@ -114,6 +114,12 @@ void app_task(uint32_t now_ms)
     }
 }
 
+void app_abort(void)
+{
+    macro_abort(&runner);
+    state = APP_WAIT_USB;
+}
+
 app_state_t app_state(void)
 {
     return state;

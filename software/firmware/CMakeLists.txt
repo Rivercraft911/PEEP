@@ -13,6 +13,7 @@ set(TINYUSB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/tinyusb)
 add_executable(peep
   src/app.c
   src/board.c
+  src/dfu_runtime.c
   src/ir_trigger.c
   src/hid_ascii.c
   src/macro.c
@@ -27,6 +28,7 @@ add_executable(peep
   ${TINYUSB_DIR}/src/common/tusb_fifo.c
   ${TINYUSB_DIR}/src/device/usbd.c
   ${TINYUSB_DIR}/src/class/hid/hid_device.c
+  ${TINYUSB_DIR}/src/class/dfu/dfu_rt_device.c
   ${TINYUSB_DIR}/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
   ${TINYUSB_DIR}/src/portable/st/stm32_fsdev/fsdev_common.c
 )

@@ -5,5 +5,6 @@
 
 void board_init(void);
 uint32_t board_millis(void);
+__attribute__((noreturn)) void board_enter_bootloader(void);
 
 #endif

@@ -10,6 +10,13 @@ MEMORY
   RAM   (xrw) : ORIGIN = 0x20000000, LENGTH = 6K
 }
 
+PHDRS
+{
+  flash PT_LOAD FLAGS(5);
+  ramfunc PT_LOAD FLAGS(5);
+  ram PT_LOAD FLAGS(6);
+}
+
 SECTIONS
 {
   .isr_vector :
@@ -17,7 +24,7 @@ SECTIONS
     . = ALIGN(4);
     KEEP(*(.isr_vector))
     . = ALIGN(4);
-  } > FLASH
+  } > FLASH :flash
 
   .text :
   {
@@ -30,7 +37,7 @@ SECTIONS
     KEEP(*(.fini))
     . = ALIGN(4);
     _etext = .;
-  } > FLASH
+  } > FLASH :flash
 
   .rodata :
   {
@@ -38,26 +45,26 @@ SECTIONS
     *(.rodata)
     *(.rodata*)
     . = ALIGN(4);
-  } > FLASH
+  } > FLASH :flash
 
   .ARM.extab :
   {
     *(.ARM.extab* .gnu.linkonce.armextab.*)
-  } > FLASH
+  } > FLASH :flash
 
   .ARM.exidx :
   {
     __exidx_start = .;
     *(.ARM.exidx*)
     __exidx_end = .;
-  } > FLASH
+  } > FLASH :flash
 
   .preinit_array :
   {
     PROVIDE_HIDDEN(__preinit_array_start = .);
     KEEP(*(.preinit_array*))
     PROVIDE_HIDDEN(__preinit_array_end = .);
-  } > FLASH
+  } > FLASH :flash
 
   .init_array :
   {
@@ -65,7 +72,7 @@ SECTIONS
     KEEP(*(SORT(.init_array.*)))
     KEEP(*(.init_array*))
     PROVIDE_HIDDEN(__init_array_end = .);
-  } > FLASH
+  } > FLASH :flash
 
   .fini_array :
   {
@@ -73,19 +80,27 @@ SECTIONS
     KEEP(*(SORT(.fini_array.*)))
     KEEP(*(.fini_array*))
     PROVIDE_HIDDEN(__fini_array_end = .);
-  } > FLASH
+  } > FLASH :flash
 
-  _sidata = LOADADDR(.data);
+  .ramfunc :
+  {
+    . = ALIGN(4);
+    _sdata = .;
+    *(.ramfunc)
+    *(.ramfunc*)
+    . = ALIGN(4);
+  } > RAM AT > FLASH :ramfunc
 
   .data :
   {
     . = ALIGN(4);
-    _sdata = .;
     *(.data)
     *(.data*)
     . = ALIGN(4);
     _edata = .;
-  } > RAM AT > FLASH
+  } > RAM AT > FLASH :ram
+
+  _sidata = LOADADDR(.ramfunc);
 
   .bss (NOLOAD) :
   {
@@ -98,7 +113,7 @@ SECTIONS
     . = ALIGN(4);
     _ebss = .;
     __bss_end__ = _ebss;
-  } > RAM
+  } > RAM :NONE
 
   ._user_heap_stack (NOLOAD) :
   {
@@ -109,7 +124,7 @@ SECTIONS
     . += _Min_Stack_Size;
     . = ALIGN(8);
     _ram_used_end = .;
-  } > RAM
+  } > RAM :NONE
 
   _flash_used_end = LOADADDR(.data) + SIZEOF(.data);
   ASSERT((_flash_used_end - ORIGIN(FLASH)) <= 24K, "flash budget exceeded")

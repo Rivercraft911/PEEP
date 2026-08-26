@@ -39,6 +39,38 @@ uint32_t board_millis(void)
     return ticks;
 }
 
+__attribute__((section(".ramfunc"), noinline)) void board_enter_bootloader(void)
+{
+    __disable_irq();
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+    NVIC->ICER[0] = UINT32_MAX;
+    NVIC->ICPR[0] = UINT32_MAX;
+
+    while ((FLASH->SR & FLASH_SR_BSY) != 0U) {
+    }
+    if ((FLASH->CR & FLASH_CR_LOCK) != 0U) {
+        FLASH->KEYR = FLASH_KEY1;
+        FLASH->KEYR = FLASH_KEY2;
+    }
+    FLASH->SR = FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR;
+    FLASH->CR = FLASH_CR_PER;
+    FLASH->AR = FLASH_BASE;
+    FLASH->CR |= FLASH_CR_STRT;
+    while ((FLASH->SR & FLASH_SR_BSY) != 0U) {
+    }
+    FLASH->CR = FLASH_CR_LOCK;
+
+    __DSB();
+    SCB->AIRCR = (0x5FAUL << SCB_AIRCR_VECTKEY_Pos) |
+                 SCB_AIRCR_SYSRESETREQ_Msk;
+    __DSB();
+    for (;;) {
+        __NOP();
+    }
+}
+
 uint32_t tusb_time_millis_api(void)
 {
     return board_millis();
