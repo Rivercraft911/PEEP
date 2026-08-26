@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "app.h"
 #include "hid_ascii.h"
 #include "macro.h"
 #include "trigger_gate.h"
@@ -28,6 +29,34 @@ typedef struct {
     bool available;
     bool ready;
 } fake_usb_t;
+
+static bool app_usb_mounted;
+static bool app_usb_ready;
+static uint16_t app_report_count;
+
+bool usb_keyboard_mounted(void)
+{
+    return app_usb_mounted;
+}
+
+bool usb_keyboard_ready(void)
+{
+    return app_usb_mounted && app_usb_ready;
+}
+
+bool usb_keyboard_send(uint8_t modifiers, uint8_t keycode)
+{
+    (void)modifiers;
+    (void)keycode;
+    ++app_report_count;
+    return true;
+}
+
+bool usb_keyboard_release(void)
+{
+    ++app_report_count;
+    return true;
+}
 
 static bool fake_available(void *context)
 {
@@ -240,6 +269,45 @@ static bool test_usb_loss(void)
     return true;
 }
 
+static bool test_startup_timer(void)
+{
+    uint32_t now;
+    uint16_t completed_reports;
+
+    app_usb_mounted = false;
+    app_usb_ready = true;
+    app_report_count = 0;
+    app_init();
+    app_task(500);
+    CHECK(app_state() == APP_WAIT_USB);
+
+    app_usb_mounted = true;
+    app_task(1000);
+    CHECK(app_state() == APP_COUNTDOWN);
+    app_task(10999);
+    CHECK(app_state() == APP_COUNTDOWN);
+    CHECK(app_report_count == 0);
+    app_task(11000);
+    CHECK(app_state() == APP_RUNNING);
+
+    for (now = 11001; now < 40000 && app_state() != APP_DONE; ++now) {
+        app_task(now);
+    }
+    CHECK(app_state() == APP_DONE);
+    CHECK(app_report_count > 0);
+
+    completed_reports = app_report_count;
+    for (; now < 52000; ++now) {
+        app_task(now);
+    }
+    CHECK(app_report_count == completed_reports);
+
+    app_usb_mounted = false;
+    app_task(now);
+    CHECK(app_state() == APP_WAIT_USB);
+    return true;
+}
+
 int main(void)
 {
     static bool (*const tests[])(void) = {
@@ -248,7 +316,8 @@ int main(void)
         test_trigger_wrap,
         test_macro_sequence,
         test_macro_wrap,
-        test_usb_loss
+        test_usb_loss,
+        test_startup_timer
     };
 
     for (uint8_t index = 0; index < sizeof(tests) / sizeof(tests[0]); ++index) {
@@ -257,6 +326,6 @@ int main(void)
         }
     }
 
-    puts("6 tests passed");
+    puts("7 tests passed");
     return 0;
 }

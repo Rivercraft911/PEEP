@@ -5,6 +5,7 @@ enable_testing()
 
 add_executable(peep_tests
   test_main.c
+  ../src/app.c
   ../src/hid_ascii.c
   ../src/macro.c
   ../src/trigger_gate.c
