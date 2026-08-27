@@ -88,6 +88,11 @@ void setup()
     WiFi.mode(WIFI_STA);
     WiFi.setHostname(kHost);
     WiFi.setAutoReconnect(true);
+    WiFi.onEvent(
+        [](WiFiEvent_t, WiFiEventInfo_t info) {
+            Serial.printf("Wi-Fi disconnect: %u\n", info.wifi_sta_disconnected.reason);
+        },
+        ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     WiFi.begin(PEEP_WIFI_SSID, PEEP_WIFI_PASSWORD);
     server.begin();
 }
