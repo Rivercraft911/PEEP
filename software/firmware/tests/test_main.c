@@ -32,42 +32,7 @@ typedef struct {
 
 static bool app_usb_mounted;
 static bool app_usb_ready;
-static bool app_ir_allowed;
-static bool app_ir_armed;
-static bool app_ir_fired;
-static uint16_t app_ir_init_count;
 static uint16_t app_report_count;
-
-void ir_trigger_init(void)
-{
-    app_ir_allowed = false;
-    app_ir_armed = false;
-    app_ir_fired = false;
-    ++app_ir_init_count;
-}
-
-void ir_trigger_task(uint32_t now_ms, bool allowed)
-{
-    (void)now_ms;
-    app_ir_allowed = allowed;
-    if (!allowed) {
-        app_ir_armed = false;
-        app_ir_fired = false;
-    }
-}
-
-bool ir_trigger_take(void)
-{
-    bool fired = app_ir_fired;
-
-    app_ir_fired = false;
-    return fired;
-}
-
-bool ir_trigger_armed(void)
-{
-    return app_ir_armed;
-}
 
 bool usb_keyboard_mounted(void)
 {
@@ -304,7 +269,7 @@ static bool test_usb_loss(void)
     return true;
 }
 
-static bool test_ir_launch(void)
+static bool test_timed_launch(void)
 {
     uint32_t start = UINT32_MAX - 100U;
     uint32_t now;
@@ -312,37 +277,26 @@ static bool test_ir_launch(void)
 
     app_usb_mounted = false;
     app_usb_ready = true;
-    app_ir_init_count = 0;
     app_report_count = 0;
     app_init();
-    CHECK(app_ir_init_count == 1);
     app_task(100);
     CHECK(app_state() == APP_WAIT_USB);
 
     app_usb_mounted = true;
-    app_task(200);
-    CHECK(app_state() == APP_REARM);
-    app_ir_armed = true;
-    app_task(201);
-    CHECK(app_state() == APP_ARMED);
-
-    app_ir_fired = true;
     app_task(start);
     CHECK(app_state() == APP_COUNTDOWN);
-    app_ir_fired = true;
-    app_task(start + 249U);
+    app_task(start + 14999U);
     CHECK(app_state() == APP_COUNTDOWN);
-    CHECK(!app_ir_fired);
     CHECK(app_report_count == 0);
-    app_task(start + 250U);
+    app_task(start + 15000U);
     CHECK(app_state() == APP_RUNNING);
 
-    for (uint32_t elapsed = 251U; elapsed < 30000U && app_state() == APP_RUNNING;
+    for (uint32_t elapsed = 15001U; elapsed < 70000U && app_state() == APP_RUNNING;
          ++elapsed) {
         now = start + elapsed;
         app_task(now);
     }
-    CHECK(app_state() == APP_REARM);
+    CHECK(app_state() == APP_DONE);
     CHECK(app_report_count > 0);
 
     completed_reports = app_report_count;
@@ -350,18 +304,12 @@ static bool test_ir_launch(void)
         app_task(++now);
     }
     CHECK(app_report_count == completed_reports);
-    CHECK(app_ir_allowed);
-
-    app_ir_armed = true;
-    app_task(++now);
-    CHECK(app_state() == APP_ARMED);
-    app_ir_fired = true;
-    app_task(++now);
-    CHECK(app_state() == APP_COUNTDOWN);
     app_usb_mounted = false;
     app_task(++now);
     CHECK(app_state() == APP_WAIT_USB);
-    CHECK(!app_ir_allowed);
+    app_usb_mounted = true;
+    app_task(++now);
+    CHECK(app_state() == APP_COUNTDOWN);
     return true;
 }
 
@@ -374,7 +322,7 @@ int main(void)
         test_macro_sequence,
         test_macro_wrap,
         test_usb_loss,
-        test_ir_launch
+        test_timed_launch
     };
 
     for (uint8_t index = 0; index < sizeof(tests) / sizeof(tests[0]); ++index) {

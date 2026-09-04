@@ -4,34 +4,35 @@
 #include <stddef.h>
 
 #include "hid_ascii.h"
-#include "ir_trigger.h"
 #include "macro.h"
 #include "usb_keyboard.h"
 
-#define COUNTDOWN_MS 250U
+#define START_DELAY_MS 15000U
 
 static macro_action_t const demo[] = {
+    MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_NONE),
+    MACRO_WAIT(600),
+    MACRO_TEXT("griffinfacepalm95.exe"),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_WAIT(3000),
+    MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_NONE),
+    MACRO_WAIT(600),
+    MACRO_TEXT("slack"),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_WAIT(8000),
+    MACRO_KEY(PEEP_MOD_LEFT_CTRL, PEEP_KEY_K),
+    MACRO_WAIT(500),
+    MACRO_TEXT("julian sanders"),
+    MACRO_WAIT(1500),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_WAIT(1000),
+    MACRO_TEXT("you know julian. I think I want to go back to using second order effects. While we are at it we should also keep geckos forever. They are super scalable."),
+    MACRO_KEY(0, PEEP_KEY_ENTER),
+    MACRO_WAIT(15000),
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
     MACRO_WAIT(500),
     MACRO_TEXT("https://www.youtube.com/watch?v=uT6mKkkvjJY"),
     MACRO_KEY(0, PEEP_KEY_ENTER),
-    MACRO_WAIT(5000),
-    MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
-    MACRO_WAIT(500),
-    MACRO_TEXT("notepad"),
-    MACRO_KEY(0, PEEP_KEY_ENTER),
-    MACRO_WAIT(1000),
-    MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_ARROW_RIGHT),
-    MACRO_WAIT(500),
-    MACRO_KEY(0, PEEP_KEY_ESCAPE),
-    MACRO_WAIT(250),
-    MACRO_TEXT("There comes a time in everyone's life where they are faced with a choice."),
-    MACRO_KEY(0, PEEP_KEY_ENTER),
-    MACRO_TEXT("To send river a rickroll, or to continue life in bliss."),
-    MACRO_KEY(0, PEEP_KEY_ENTER),
-    MACRO_TEXT("You made your choice."),
-    MACRO_KEY(0, PEEP_KEY_ENTER),
-    MACRO_TEXT("Face the consequences."),
     MACRO_END()
 };
 
@@ -73,7 +74,6 @@ void app_init(void)
         .release = usb_release
     };
 
-    ir_trigger_init();
     macro_init(&runner, io);
     state = APP_WAIT_USB;
 }
@@ -84,38 +84,20 @@ void app_task(uint32_t now_ms)
 
     if (!usb_keyboard_mounted()) {
         macro_abort(&runner);
-        ir_trigger_task(now_ms, false);
         state = APP_WAIT_USB;
         return;
     }
 
     if (state == APP_WAIT_USB) {
-        if (!macro_busy(&runner)) {
-            state = APP_REARM;
-        }
-        return;
-    }
-
-    if (state == APP_REARM) {
-        ir_trigger_task(now_ms, true);
-        if (ir_trigger_armed()) {
-            state = APP_ARMED;
-        }
-    } else if (state == APP_ARMED) {
-        ir_trigger_task(now_ms, true);
-        if (ir_trigger_take()) {
-            countdown_end = now_ms + COUNTDOWN_MS;
-            state = APP_COUNTDOWN;
-        }
+        countdown_end = now_ms + START_DELAY_MS;
+        state = APP_COUNTDOWN;
     } else if (state == APP_COUNTDOWN) {
-        ir_trigger_task(now_ms, false);
         if ((int32_t)(now_ms - countdown_end) >= 0) {
             state = macro_start(&runner, demo, now_ms) ? APP_RUNNING : APP_WAIT_USB;
         }
     } else if (state == APP_RUNNING) {
-        ir_trigger_task(now_ms, false);
         if (!macro_busy(&runner)) {
-            state = APP_REARM;
+            state = APP_DONE;
         }
     }
 }
