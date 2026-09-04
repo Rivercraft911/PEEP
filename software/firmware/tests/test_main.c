@@ -285,13 +285,13 @@ static bool test_timed_launch(void)
     app_usb_mounted = true;
     app_task(start);
     CHECK(app_state() == APP_COUNTDOWN);
-    app_task(start + 14999U);
+    app_task(start + 179999U);
     CHECK(app_state() == APP_COUNTDOWN);
     CHECK(app_report_count == 0);
-    app_task(start + 15000U);
+    app_task(start + 180000U);
     CHECK(app_state() == APP_RUNNING);
 
-    for (uint32_t elapsed = 15001U; elapsed < 70000U && app_state() == APP_RUNNING;
+    for (uint32_t elapsed = 180001U; elapsed < 240000U && app_state() == APP_RUNNING;
          ++elapsed) {
         now = start + elapsed;
         app_task(now);

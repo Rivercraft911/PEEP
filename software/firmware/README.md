@@ -69,7 +69,7 @@ Do not solder or desolder while powered. The downloaded image is application fir
 
 Windows enumerates `PEEP Keyboard`. This one-shot image:
 
-1. Waits 15 seconds after USB configuration.
+1. Waits three minutes after USB configuration.
 2. Opens `griffinfacepalm95.exe` through Windows Search.
 3. Opens Slack, selects Julian Sanders, and sends the configured message.
 4. Waits 15 seconds, then opens the configured URL in the default browser.

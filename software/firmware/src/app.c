@@ -7,7 +7,7 @@
 #include "macro.h"
 #include "usb_keyboard.h"
 
-#define START_DELAY_MS 15000U
+#define START_DELAY_MS (3U * 60U * 1000U)
 
 static macro_action_t const demo[] = {
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_NONE),
