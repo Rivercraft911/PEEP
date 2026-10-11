@@ -23,22 +23,65 @@ bool network_announced;
 uint32_t last_status_ms;
 
 char const page[] PROGMEM = R"HTML(
-<!doctype html><meta name="viewport" content="width=device-width">
-<title>peep.</title><style>
-*{box-sizing:border-box}body{margin:0;min-height:100svh;overflow:hidden;background:#000;color:#fff;font-family:Arial,sans-serif}
-main{min-height:100svh;display:flex;flex-direction:column;align-items:center;padding:clamp(2rem,7vw,5rem) 1.5rem;text-align:center}
-h1{margin:0;font-size:clamp(3rem,10vw,6rem);font-weight:600;letter-spacing:-.07em}
-button{position:relative;isolation:isolate;margin:auto 0;border:0;background:none;color:#ff2525;cursor:pointer;font:900 clamp(5rem,24vw,13rem)/.8 Arial,sans-serif;letter-spacing:-.08em;text-shadow:0 0 .3em #f00;transition:transform .15s,text-shadow .15s}
-button:before{content:"";position:absolute;z-index:-1;inset:-.5em;background:radial-gradient(circle,#f002 0,#f000 65%);filter:blur(20px);animation:pulse 2.2s ease-in-out infinite}
-button:hover{transform:scale(1.04);text-shadow:0 0 .45em #f00}button:active{transform:scale(.96)}button:focus-visible{outline:2px solid #fff;outline-offset:.2em}
-p{min-height:1.2em;margin:0;color:#888;font-size:.8rem;letter-spacing:.18em;text-transform:lowercase}
-@keyframes pulse{50%{opacity:.45;transform:scale(1.14)}}@media(prefers-reduced-motion:reduce){button:before{animation:none}}
-</style><main><h1>peep.</h1><button id="fire">fire</button><p id="status">ready</p></main>
+<!doctype html>
+<meta name="viewport" content="width=device-width">
+<title>peep.</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0; min-height: 100svh; overflow: hidden;
+    background: #000; color: #fff; font-family: Arial, sans-serif;
+}
+main {
+    min-height: 100svh; display: flex; flex-direction: column; align-items: center;
+    padding: clamp(2rem, 7vw, 5rem) 1.5rem; text-align: center;
+}
+h1 {
+    margin: 0; font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 600; letter-spacing: -.07em;
+}
+button {
+    position: relative; isolation: isolate; margin: auto 0; border: 0;
+    background: none; color: #ff2525; cursor: pointer;
+    font: 900 clamp(5rem, 24vw, 13rem)/.8 Arial, sans-serif;
+    letter-spacing: -.08em; text-shadow: 0 0 .3em #f00;
+    transition: transform .15s, text-shadow .15s;
+}
+button:before {
+    content: ""; position: absolute; z-index: -1; inset: -.5em;
+    background: radial-gradient(circle, #f002 0, #f000 65%);
+    filter: blur(20px); animation: pulse 2.2s ease-in-out infinite;
+}
+button:hover { transform: scale(1.04); text-shadow: 0 0 .45em #f00; }
+button:active { transform: scale(.96); }
+button:focus-visible { outline: 2px solid #fff; outline-offset: .2em; }
+p {
+    min-height: 1.2em; margin: 0; color: #888;
+    font-size: .8rem; letter-spacing: .18em; text-transform: lowercase;
+}
+@keyframes pulse { 50% { opacity: .45; transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { button:before { animation: none; } }
+</style>
+<main>
+    <h1>peep.</h1>
+    <button id="fire">fire</button>
+    <p id="status">ready</p>
+</main>
 <script>
-const b=document.querySelector('button'),s=document.querySelector('p');
-b.onclick=async()=>{b.disabled=true;s.textContent='sending...';
-try{let r=await fetch('/trigger',{method:'POST'});s.textContent=await r.text()}
-catch(e){s.textContent='connection lost.'}setTimeout(()=>b.disabled=false,500)};
+const button = document.querySelector('#fire');
+const status = document.querySelector('#status');
+
+button.onclick = async () => {
+    button.disabled = true;
+    status.textContent = 'sending...';
+    try {
+        const response = await fetch('/trigger', { method: 'POST' });
+        status.textContent = await response.text();
+    } catch {
+        status.textContent = 'connection lost.';
+    }
+    setTimeout(() => { button.disabled = false; }, 500);
+};
 </script>
 )HTML";
 

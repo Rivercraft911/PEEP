@@ -4,10 +4,9 @@
 #include <stddef.h>
 
 #include "hid_ascii.h"
+#include "ir_trigger.h"
 #include "macro.h"
 #include "usb_keyboard.h"
-
-#define START_DELAY_MS (3U * 60U * 1000U)
 
 static macro_action_t const demo[] = {
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_NONE),
@@ -26,7 +25,9 @@ static macro_action_t const demo[] = {
     MACRO_WAIT(1500),
     MACRO_KEY(0, PEEP_KEY_ENTER),
     MACRO_WAIT(1000),
-    MACRO_TEXT("you know julian. I think I want to go back to using second order effects. While we are at it we should also keep geckos forever. They are super scalable."),
+    MACRO_TEXT("you know julian. I think I want to go back to using second order effects. "
+               "While we are at it we should also keep geckos forever. "
+               "They are super scalable."),
     MACRO_KEY(0, PEEP_KEY_ENTER),
     MACRO_WAIT(15000),
     MACRO_KEY(PEEP_MOD_LEFT_GUI, PEEP_KEY_R),
@@ -38,7 +39,6 @@ static macro_action_t const demo[] = {
 
 static macro_runner_t runner;
 static app_state_t state;
-static uint32_t countdown_end;
 
 static bool usb_available(void *context)
 {
@@ -74,6 +74,7 @@ void app_init(void)
         .release = usb_release
     };
 
+    ir_trigger_init();
     macro_init(&runner, io);
     state = APP_WAIT_USB;
 }
@@ -83,28 +84,37 @@ void app_task(uint32_t now_ms)
     macro_task(&runner, now_ms);
 
     if (!usb_keyboard_mounted()) {
-        macro_abort(&runner);
+        app_abort();
+        return;
+    }
+
+    if (state == APP_RUNNING) {
+        ir_trigger_task(now_ms, false);
+        if (!macro_busy(&runner)) {
+            state = APP_REARM;
+        }
+        return;
+    }
+
+    if (!usb_keyboard_ready() || macro_busy(&runner)) {
+        ir_trigger_task(now_ms, false);
         state = APP_WAIT_USB;
         return;
     }
 
-    if (state == APP_WAIT_USB) {
-        countdown_end = now_ms + START_DELAY_MS;
-        state = APP_COUNTDOWN;
-    } else if (state == APP_COUNTDOWN) {
-        if ((int32_t)(now_ms - countdown_end) >= 0) {
-            state = macro_start(&runner, demo, now_ms) ? APP_RUNNING : APP_WAIT_USB;
-        }
-    } else if (state == APP_RUNNING) {
-        if (!macro_busy(&runner)) {
-            state = APP_DONE;
-        }
+    ir_trigger_task(now_ms, true);
+    if (ir_trigger_take()) {
+        state = macro_start(&runner, demo, now_ms) ? APP_RUNNING : APP_WAIT_USB;
+        ir_trigger_task(now_ms, false);
+    } else {
+        state = ir_trigger_armed() ? APP_ARMED : APP_REARM;
     }
 }
 
 void app_abort(void)
 {
     macro_abort(&runner);
+    ir_trigger_task(0, false);
     state = APP_WAIT_USB;
 }
 

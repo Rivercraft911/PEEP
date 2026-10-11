@@ -39,6 +39,7 @@ uint32_t board_millis(void)
     return ticks;
 }
 
+/* Run from RAM while erasing the first flash page to force ROM boot on reset. */
 __attribute__((section(".ramfunc"), noinline)) void board_enter_bootloader(void)
 {
     __disable_irq();

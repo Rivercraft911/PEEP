@@ -14,6 +14,7 @@ void trigger_gate_update(trigger_gate_t *gate, uint32_t now_ms, bool allowed,
 
     if (gate->armed) {
         if (falling_edge) {
+            gate->tracking_high = false;
             gate->armed = false;
             gate->fired = true;
         }
@@ -24,7 +25,7 @@ void trigger_gate_update(trigger_gate_t *gate, uint32_t now_ms, bool allowed,
         return;
     }
 
-    if (!line_high) {
+    if (!line_high || falling_edge) {
         gate->tracking_high = false;
     } else if (!gate->tracking_high) {
         gate->tracking_high = true;

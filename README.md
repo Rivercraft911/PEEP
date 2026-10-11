@@ -1,44 +1,37 @@
-<div align="center">
-
 # PEEP
 
-### A tiny, open-source, optically controlled USB HID automation device
+A 12.06 × 8 mm infrared-triggered USB keyboard.
 
-**how small can a useful USB automation device get?**
+How small can a useful USB automation device get? PEEP is my attempt to find out.
 
+<p>
+<img src="docs/media/peep-on-fingertip.jpg" alt="An assembled PEEP board on a fingertip" width="300">
+<img src="docs/media/peep-in-usb-a.jpg" alt="PEEP inside a USB-A port" width="300">
+</p>
 
-## How it works
-
-```text
-Optical remote
-      ↓ 38 kHz infrared
-Photodiode + VSOP38338 receiver
-      ↓ decoded pulse timing
-STM32F042 macro engine
-      ↓ USB HID reports
-Computer sees a standard keyboard
-```
-
-PEEP is powered directly by USB. The receiver removes the 38 kHz carrier and sends the pulse envelope to the microcontroller, where firmware can decode a command, select a stored macro, and emit ordinary USB HID keyboard reports.
+<!-- Add a demo thumbnail and video link here. -->
 
 ## Hardware
 
-- 12.06 × 8 mm, four-layer, 0.8 mm PCB
-- Direct USB-A edge connection
-- STM32F042G6 Cortex-M0 MCU
-- Crystal-less USB Full Speed
-- VEMD10940F photodiode
-- VSOP38338 38 kHz IR receiver frontend
-- USB DFU recovery using the onboard BOOT0 flash points
-- Open KiCad 10 design and production files
+- Four-layer, 0.8 mm PCB with a direct USB-A edge connection
+- STM32F042G6 Cortex-M0 with crystal-less USB Full Speed
+- VEMD10940F photodiode and VSOP38338 38 kHz IR receiver
+- Factory USB DFU bootloader; bridge BOOT0 to 3.3 V for recovery
 
-<!--
-BOARD PHOTOS
--->
+## Software
 
-## Why open source?
+An IR burst starts the stored macro. PEEP sends standard USB keyboard reports, ignores IR while the macro runs, then re-arms after 250 ms of idle receiver time. Plugging it in does not start the demo.
 
-PEEP is partly a useful tool and partly an experiment in extreme hardware miniaturization. The design files, production outputs, firmware, protocol, and host tools are intended to remain inspectable and reproducible.
+- [Firmware, build, and flashing instructions](software/firmware/README.md)
+- [XIAO ESP32-C6 Wi-Fi / IR remote](software/firmware/esp32-trigger/README.md)
+- [KiCad project](PCB/peep/peep.kicad_pro) and [PCB setup](PCB/README.md)
+- [BOM and production files](PCB/peep/production/)
 
-Pretty please use PEEP only with systems you own or are explicitly authorized to test.
+There is no Windows companion or packet-upload protocol yet.
+
+The firmware builds and passes native tests; the IR path still needs an on-board check.
+
+Use PEEP only on systems you own or have permission to test.
+
+[MIT license](LICENSE). Dependencies retain their own licenses.
 

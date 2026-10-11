@@ -4,6 +4,7 @@
 
 #include "app.h"
 #include "hid_ascii.h"
+#include "ir_trigger.h"
 #include "macro.h"
 #include "trigger_gate.h"
 
@@ -32,7 +33,38 @@ typedef struct {
 
 static bool app_usb_mounted;
 static bool app_usb_ready;
+static trigger_gate_t app_ir_gate;
+static bool app_ir_line_high;
+static bool app_ir_edge;
+static bool app_ir_allowed;
+static uint16_t app_ir_init_count;
 static uint16_t app_report_count;
+static uint16_t app_release_count;
+
+void ir_trigger_init(void)
+{
+    app_ir_gate = (trigger_gate_t){0};
+    app_ir_edge = false;
+    app_ir_allowed = false;
+    ++app_ir_init_count;
+}
+
+void ir_trigger_task(uint32_t now_ms, bool allowed)
+{
+    trigger_gate_update(&app_ir_gate, now_ms, allowed, app_ir_line_high, app_ir_edge);
+    app_ir_edge = false;
+    app_ir_allowed = allowed;
+}
+
+bool ir_trigger_take(void)
+{
+    return trigger_gate_take(&app_ir_gate);
+}
+
+bool ir_trigger_armed(void)
+{
+    return trigger_gate_armed(&app_ir_gate);
+}
 
 bool usb_keyboard_mounted(void)
 {
@@ -55,6 +87,39 @@ bool usb_keyboard_send(uint8_t modifiers, uint8_t keycode)
 bool usb_keyboard_release(void)
 {
     ++app_report_count;
+    ++app_release_count;
+    return true;
+}
+
+static void reset_app(void)
+{
+    app_usb_mounted = false;
+    app_usb_ready = true;
+    app_ir_line_high = true;
+    app_ir_init_count = 0;
+    app_report_count = 0;
+    app_release_count = 0;
+    app_init();
+}
+
+static bool arm_app(uint32_t now_ms)
+{
+    reset_app();
+    app_usb_mounted = true;
+    app_task(now_ms);
+    CHECK(app_state() == APP_REARM);
+    app_task(now_ms + 250U);
+    CHECK(app_state() == APP_ARMED);
+    return true;
+}
+
+static bool fire_app(uint32_t now_ms)
+{
+    app_ir_line_high = false;
+    app_ir_edge = true;
+    app_task(now_ms);
+    CHECK(app_state() == APP_RUNNING);
+    CHECK(!app_ir_allowed);
     return true;
 }
 
@@ -172,6 +237,34 @@ static bool test_trigger_wrap(void)
     return true;
 }
 
+static bool test_trigger_quiet_time(void)
+{
+    trigger_gate_t gate = {0};
+
+    trigger_gate_update(&gate, 0, true, true, false);
+    trigger_gate_update(&gate, 250, true, true, true);
+    CHECK(!trigger_gate_armed(&gate));
+    trigger_gate_update(&gate, 251, true, true, false);
+    trigger_gate_update(&gate, 500, true, true, false);
+    CHECK(!trigger_gate_armed(&gate));
+    trigger_gate_update(&gate, 501, true, true, false);
+    CHECK(trigger_gate_armed(&gate));
+
+    trigger_gate_update(&gate, 502, true, false, true);
+    trigger_gate_update(&gate, 503, true, true, true);
+    CHECK(trigger_gate_take(&gate));
+    CHECK(!trigger_gate_take(&gate));
+    trigger_gate_update(&gate, 504, true, true, false);
+    trigger_gate_update(&gate, 753, true, true, false);
+    CHECK(!trigger_gate_armed(&gate));
+    trigger_gate_update(&gate, 754, true, true, false);
+    CHECK(trigger_gate_armed(&gate));
+    trigger_gate_update(&gate, 755, false, false, true);
+    CHECK(!trigger_gate_armed(&gate));
+    CHECK(!trigger_gate_take(&gate));
+    return true;
+}
+
 static bool test_macro_sequence(void)
 {
     static macro_action_t const actions[] = {
@@ -269,47 +362,162 @@ static bool test_usb_loss(void)
     return true;
 }
 
-static bool test_timed_launch(void)
+static bool test_ir_launch(void)
 {
-    uint32_t start = UINT32_MAX - 100U;
-    uint32_t now;
+    uint32_t now = 180001U;
     uint16_t completed_reports;
 
-    app_usb_mounted = false;
-    app_usb_ready = true;
-    app_report_count = 0;
-    app_init();
-    app_task(100);
-    CHECK(app_state() == APP_WAIT_USB);
-
-    app_usb_mounted = true;
-    app_task(start);
-    CHECK(app_state() == APP_COUNTDOWN);
-    app_task(start + 179999U);
-    CHECK(app_state() == APP_COUNTDOWN);
+    CHECK(arm_app(0));
+    CHECK(app_ir_init_count == 1);
+    app_task(180000);
+    CHECK(app_state() == APP_ARMED);
     CHECK(app_report_count == 0);
-    app_task(start + 180000U);
-    CHECK(app_state() == APP_RUNNING);
+    CHECK(fire_app(now));
 
-    for (uint32_t elapsed = 180001U; elapsed < 240000U && app_state() == APP_RUNNING;
-         ++elapsed) {
-        now = start + elapsed;
-        app_task(now);
+    app_ir_line_high = true;
+    while (app_state() == APP_RUNNING && now < 240000U) {
+        app_ir_edge = true;
+        app_task(++now);
+        CHECK(!app_ir_allowed);
     }
-    CHECK(app_state() == APP_DONE);
+    CHECK(app_state() == APP_REARM);
     CHECK(app_report_count > 0);
 
     completed_reports = app_report_count;
-    for (uint16_t elapsed = 0; elapsed < 1000U; ++elapsed) {
-        app_task(++now);
-    }
+    app_task(++now);
+    CHECK(app_state() == APP_REARM);
+    app_task(now + 249U);
+    CHECK(app_state() == APP_REARM);
+    app_task(now + 250U);
+    CHECK(app_state() == APP_ARMED);
     CHECK(app_report_count == completed_reports);
-    app_usb_mounted = false;
-    app_task(++now);
+
+    CHECK(fire_app(now + 251U));
+    return true;
+}
+
+static bool test_ir_usb_ready(void)
+{
+    reset_app();
+    app_ir_edge = true;
+    app_task(0);
     CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!app_ir_allowed);
+
     app_usb_mounted = true;
-    app_task(++now);
-    CHECK(app_state() == APP_COUNTDOWN);
+    app_usb_ready = false;
+    app_ir_edge = true;
+    app_task(1000);
+    CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!app_ir_allowed);
+    CHECK(!ir_trigger_take());
+
+    app_usb_ready = true;
+    app_task(2000);
+    CHECK(app_state() == APP_REARM);
+    app_task(2249);
+    CHECK(app_state() == APP_REARM);
+    app_task(2250);
+    CHECK(app_state() == APP_ARMED);
+
+    app_usb_ready = false;
+    app_ir_edge = true;
+    app_task(2251);
+    CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!ir_trigger_take());
+    CHECK(app_report_count == 0);
+    return true;
+}
+
+static bool test_ir_low_input(void)
+{
+    reset_app();
+    app_usb_mounted = true;
+    app_ir_line_high = false;
+    app_task(0);
+    app_task(10000);
+    CHECK(app_state() == APP_REARM);
+    CHECK(app_report_count == 0);
+
+    app_ir_line_high = true;
+    app_task(10001);
+    app_task(10250);
+    CHECK(app_state() == APP_REARM);
+    app_task(10251);
+    CHECK(app_state() == APP_ARMED);
+    return true;
+}
+
+static bool test_ir_usb_loss(void)
+{
+    CHECK(arm_app(100));
+    CHECK(fire_app(351));
+    app_task(352);
+    app_task(353);
+    CHECK(app_report_count == 1);
+    CHECK(app_release_count == 0);
+
+    app_usb_mounted = false;
+    app_ir_edge = true;
+    app_task(354);
+    CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!app_ir_allowed);
+    CHECK(!ir_trigger_take());
+    CHECK(app_release_count == 0);
+
+    app_usb_mounted = true;
+    app_task(400);
+    CHECK(app_state() == APP_REARM);
+    CHECK(app_release_count == 1);
+    CHECK(app_report_count == 2);
+
+    app_ir_line_high = true;
+    app_task(401);
+    app_task(650);
+    CHECK(app_state() == APP_REARM);
+    app_task(651);
+    CHECK(app_state() == APP_ARMED);
+    CHECK(app_report_count == 2);
+    return true;
+}
+
+static bool test_ir_abort(void)
+{
+    CHECK(arm_app(0));
+    app_ir_edge = true;
+    app_abort();
+    CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!app_ir_allowed);
+    CHECK(!ir_trigger_armed());
+    CHECK(!ir_trigger_take());
+    CHECK(app_report_count == 0);
+
+    CHECK(arm_app(0));
+    CHECK(fire_app(251));
+    app_task(252);
+    app_task(253);
+    CHECK(app_report_count == 1);
+    app_ir_edge = true;
+    app_abort();
+    CHECK(app_state() == APP_WAIT_USB);
+    CHECK(!app_ir_allowed);
+    CHECK(!ir_trigger_take());
+    app_task(254);
+    CHECK(app_release_count == 1);
+    CHECK(app_state() == APP_REARM);
+    CHECK(app_report_count == 2);
+    return true;
+}
+
+static bool test_ir_wrap(void)
+{
+    uint32_t start = UINT32_MAX - 100U;
+
+    CHECK(arm_app(start));
+    CHECK(fire_app(start + 251U));
+    app_task(start + 252U);
+    app_task(start + 253U);
+    CHECK(app_report_count == 1);
     return true;
 }
 
@@ -319,18 +527,25 @@ int main(void)
         test_ascii,
         test_trigger,
         test_trigger_wrap,
+        test_trigger_quiet_time,
         test_macro_sequence,
         test_macro_wrap,
         test_usb_loss,
-        test_timed_launch
+        test_ir_launch,
+        test_ir_usb_ready,
+        test_ir_low_input,
+        test_ir_usb_loss,
+        test_ir_abort,
+        test_ir_wrap
     };
+    size_t test_count = sizeof(tests) / sizeof(tests[0]);
 
-    for (uint8_t index = 0; index < sizeof(tests) / sizeof(tests[0]); ++index) {
+    for (size_t index = 0; index < test_count; ++index) {
         if (!tests[index]()) {
             return 1;
         }
     }
 
-    puts("7 tests passed");
+    printf("%zu tests passed\n", test_count);
     return 0;
 }

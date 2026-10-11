@@ -35,8 +35,8 @@ bool usb_keyboard_release(void)
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
-                               hid_report_type_t report_type, uint8_t *buffer,
-                               uint16_t requested_length)
+                              hid_report_type_t report_type, uint8_t *buffer,
+                              uint16_t requested_length)
 {
     (void)instance;
     (void)report_id;
@@ -47,8 +47,8 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
 }
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id,
-                           hid_report_type_t report_type, uint8_t const *buffer,
-                           uint16_t buffer_size)
+                          hid_report_type_t report_type, uint8_t const *buffer,
+                          uint16_t buffer_size)
 {
     (void)instance;
     (void)report_id;

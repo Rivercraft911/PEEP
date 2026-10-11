@@ -1,6 +1,22 @@
 # PEEP firmware
 
-PEEP is a USB keyboard automation device for authorized systems. This image targets Windows 11 with a US ANSI keyboard layout.
+STM32F042G6 firmware using TinyUSB. The demo targets Windows 11 with a US ANSI keyboard layout.
+
+## Demo
+
+PEEP appears as `PEEP Keyboard`. An IR burst starts the demo:
+
+1. Opens `griffinfacepalm95.exe` through Windows Search.
+2. Opens Slack, selects Julian Sanders, and sends the configured message.
+3. Waits 15 seconds, then opens the configured URL in the default browser.
+
+Edit the executable, recipient, message, and URL in [src/app.c](src/app.c) before flashing. Use only on systems you own or have permission to test.
+
+There is no auto-start timer. Once USB HID is ready and the receiver has been idle for 250 ms, PEEP arms. A falling edge on PA1 starts the macro. IR is ignored during playback; afterward, another 250 ms of idle time is required before a new trigger.
+
+USB loss, suspend, or a DFU request aborts playback and disarms IR. Held keys are released when USB is available again.
+
+This is a burst trigger, not a packet decoder. There are no command addresses or authentication; another IR remote can trigger it. The IR path still needs verification on the board.
 
 ## Build
 
@@ -20,7 +36,7 @@ cmake -S software/firmware -B software/firmware/build -G Ninja \
 cmake --build software/firmware/build
 ```
 
-Outputs are `peep.elf`, `peep.bin`, `peep.hex`, and `peep.map`. The link fails above 24 KiB flash or 4 KiB RAM.
+Outputs: `peep.elf`, `peep.bin`, `peep.hex`, and `peep.map`. The linker enforces a 24 KiB flash / 4 KiB RAM budget.
 
 Run native tests with:
 
@@ -30,9 +46,11 @@ cmake --build software/firmware/build-tests
 ctest --test-dir software/firmware/build-tests --output-on-failure
 ```
 
+Tests cover IR arming, held-low input, duplicate bursts, repeated runs, USB readiness/loss, aborts, and timer wraparound, along with ASCII mapping and macro playback.
+
 ## Flash
 
-The STM32 factory USB DFU bootloader is already in ROM. Install `dfu-util` on macOS with `brew install dfu-util`.
+The factory USB DFU bootloader is in ROM; only the application is flashed. On macOS, install `dfu-util` with `brew install dfu-util`.
 
 For the first install or recovery:
 
@@ -55,25 +73,14 @@ For the first install or recovery:
 
 5. Unplug PEEP, remove the bridge while unpowered, and reconnect it.
 
-After this firmware is installed, build and run:
+For later updates, rebuild and run:
 
 ```sh
 software/firmware/tools/flash.sh
 ```
 
-The script asks the DFU Runtime interface to release all keys, invalidates the first application page from RAM, and resets into ROM DFU. If flashing is interrupted, the STM32F04 empty check keeps the board in ROM DFU. The physical bridge remains the recovery path if the application cannot enumerate.
+The script requests DFU mode. The firmware releases keys, erases the first application page from RAM, and resets. The STM32 empty-flash check then selects ROM DFU. If the application won't enumerate, use the physical bridge.
 
-Do not solder or desolder while powered. The downloaded image is application firmware, not a replacement bootloader. The ROM address and PB8 requirement come from [ST AN2606](https://www.st.com/resource/en/application_note/an2606-stm32-microcontroller-system-memory-boot-mode-stmicroelectronics.pdf); memory remapping follows [ST RM0091](https://www.st.com/resource/en/reference_manual/dm00031936-stm32f0x1stm32f0x2stm32f0x8-advanced-armbased-32bit-mcus-stmicroelectronics.pdf).
-
-## Demo
-
-Windows enumerates `PEEP Keyboard`. This one-shot image:
-
-1. Waits three minutes after USB configuration.
-2. Opens `griffinfacepalm95.exe` through Windows Search.
-3. Opens Slack, selects Julian Sanders, and sends the configured message.
-4. Waits 15 seconds, then opens the configured URL in the default browser.
-
-The sequence runs once per connection. USB loss or suspend aborts it and releases any held key.
+Never solder or desolder while powered. Bootloader details: [ST AN2606](https://www.st.com/resource/en/application_note/an2606-stm32-microcontroller-system-memory-boot-mode-stmicroelectronics.pdf) and [ST RM0091](https://www.st.com/resource/en/reference_manual/dm00031936-stm32f0x1stm32f0x2stm32f0x8-advanced-armbased-32bit-mcus-stmicroelectronics.pdf).
 
 `CAFE:5045` is a development-only USB VID/PID. Replace it with assigned values before distributing hardware.

@@ -5,9 +5,9 @@
 
 typedef enum {
     APP_WAIT_USB,
-    APP_COUNTDOWN,
-    APP_RUNNING,
-    APP_DONE
+    APP_REARM,
+    APP_ARMED,
+    APP_RUNNING
 } app_state_t;
 
 void app_init(void);
