@@ -29,7 +29,7 @@ An IR burst starts the stored macro. PEEP sends standard USB keyboard reports, i
 
 There is no Windows companion or packet-upload protocol yet.
 
-The firmware builds and passes native tests; the IR path still needs an on-board check.
+The firmware builds and passes native tests.
 
 Use PEEP only on systems you own or have permission to test.
 

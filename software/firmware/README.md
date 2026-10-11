@@ -16,7 +16,7 @@ There is no auto-start timer. Once USB HID is ready and the receiver has been id
 
 USB loss, suspend, or a DFU request aborts playback and disarms IR. Held keys are released when USB is available again.
 
-This is a burst trigger, not a packet decoder. There are no command addresses or authentication; another IR remote can trigger it. The IR path still needs verification on the board.
+This is a burst trigger, not a packet decoder. There are no command addresses or authentication; another IR remote can trigger it.
 
 ## Build
 
