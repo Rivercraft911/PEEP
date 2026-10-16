@@ -1,8 +1,6 @@
 # PEEP
-
-A 12.06 × 8 mm infrared-triggered USB keyboard.
-
-How small can a useful USB automation device get? PEEP is my attempt to find out.
+The World's smallest remote-controlled keystroke injection device...
+A 12.06 × 8 mm infrared-controlled USB keyboard.
 
 <p>
 <img src="docs/media/peep-on-fingertip.jpg" alt="An assembled PEEP board on a fingertip" width="300">
